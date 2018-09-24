@@ -216,7 +216,7 @@ void usage(void)
 }
 
 /* globals */
-options_t opts = {
+static options_t opts = {
 	.bin_ext_file = "NA",
 	.sec_cfg_file = "NA",
 	.sec_opts = 0,
@@ -1578,9 +1578,9 @@ error:
 
 int main(int argc, char *argv[])
 {
-	char in_file[MAX_FILENAME+1];
-	char out_file[MAX_FILENAME+1];
-	char ext_file[MAX_FILENAME+1];
+	char *in_file;
+	char *out_file = NULL;
+	char ext_file[MAX_FILENAME+1] = { 0 };
 	FILE *in_fd = NULL;
 	FILE *out_fd = NULL;
 	int parse = 0;
@@ -1660,12 +1660,12 @@ int main(int argc, char *argv[])
 	if (optind >= argc)
 		usage_err("missing input file name");
 
-	strncpy(in_file, argv[optind], MAX_FILENAME);
+	in_file = argv[optind];
 	optind++;
 
 	/* Output file must exist in non parse mode */
 	if (optind < argc)
-		strncpy(out_file, argv[optind], MAX_FILENAME);
+		out_file = argv[optind];
 	else if (!parse)
 		usage_err("missing output file name");
 
