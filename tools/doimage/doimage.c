@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
@@ -40,7 +41,6 @@
 #endif
 #endif /* CONFIG_MVEBU_SECURE_BOOT */
 
-#define MAX_FILENAME		256
 #define CSK_ARR_SZ		16
 #define CSK_ARR_EMPTY_FILE	"*"
 #define AES_KEY_BIT_LEN		256
@@ -131,9 +131,9 @@ typedef struct _sec_entry {
 
 typedef struct _sec_options {
 #ifdef CONFIG_MVEBU_SECURE_BOOT
-	char aes_key_file[MAX_FILENAME+1];
-	char kak_key_file[MAX_FILENAME+1];
-	char csk_key_file[CSK_ARR_SZ][MAX_FILENAME+1];
+	char aes_key_file[NAME_MAX+1];
+	char kak_key_file[NAME_MAX+1];
+	char csk_key_file[CSK_ARR_SZ][NAME_MAX+1];
 	uint32_t	box_id;
 	uint32_t	flash_id;
 	uint32_t	jtag_delay;
@@ -151,8 +151,8 @@ typedef struct _sec_options {
 } sec_options;
 
 typedef struct _options {
-	char bin_ext_file[MAX_FILENAME+1];
-	char sec_cfg_file[MAX_FILENAME+1];
+	char bin_ext_file[NAME_MAX+1];
+	char sec_cfg_file[NAME_MAX+1];
 	sec_options *sec_opts;
 	uint32_t  load_addr;
 	uint32_t  exec_addr;
@@ -603,11 +603,11 @@ int verify_and_copy_file_name_entry(const char *element_name,
 {
 	int element_length = strlen(element);
 
-	if (element_length >= MAX_FILENAME) {
+	if (element_length >= NAME_MAX) {
 		fprintf(stderr, "The file name %s for %s is too long (%d). ",
 			element, element_name, element_length);
 		fprintf(stderr, "Maximum allowed %d characters!\n",
-			MAX_FILENAME);
+			NAME_MAX);
 		return -1;
 	} else if (element_length == 0) {
 		fprintf(stderr, "The file name for %s is empty!\n",
@@ -1410,14 +1410,14 @@ int format_extensions(char *ext_filename)
 		return 1;
 	}
 
-	if (strncmp(opts.bin_ext_file, "NA", MAX_FILENAME)) {
+	if (strncmp(opts.bin_ext_file, "NA", NAME_MAX)) {
 		if (format_bin_ext(opts.bin_ext_file, out_fd)) {
 			ret = 1;
 			goto error;
 		}
 	}
 #ifdef CONFIG_MVEBU_SECURE_BOOT
-	if (strncmp(opts.sec_cfg_file, "NA", MAX_FILENAME)) {
+	if (strncmp(opts.sec_cfg_file, "NA", NAME_MAX)) {
 		if (format_sec_ext(opts.sec_cfg_file, out_fd)) {
 			ret = 1;
 			goto error;
@@ -1562,7 +1562,7 @@ int main(int argc, char *argv[])
 {
 	char *in_file;
 	char *out_file = NULL;
-	char ext_file[MAX_FILENAME+1] = { 0 };
+	char ext_file[NAME_MAX+1] = { 0 };
 	FILE *in_fd = NULL;
 	FILE *out_fd = NULL;
 	int parse = 0;
@@ -1577,7 +1577,7 @@ int main(int argc, char *argv[])
 	/* Create temporary file for building extensions
 	 * Use process ID for allowing multiple parallel runs
 	 */
-	snprintf(ext_file, MAX_FILENAME, "/tmp/ext_file-%x", getpid());
+	snprintf(ext_file, NAME_MAX, "/tmp/ext_file-%x", getpid());
 
 	while ((opt = getopt(argc, argv, "hpms:i:l:e:a:b:u:n:t:c:k:")) != -1) {
 		switch (opt) {
@@ -1597,7 +1597,7 @@ int main(int argc, char *argv[])
 			opts.baudrate = strtoul(optarg, NULL, 0);
 			break;
 		case 'b':
-			strncpy(opts.bin_ext_file, optarg, MAX_FILENAME);
+			strncpy(opts.bin_ext_file, optarg, NAME_MAX);
 			ext_cnt++;
 			break;
 		case 'p':
@@ -1615,7 +1615,7 @@ int main(int argc, char *argv[])
 			break;
 #ifdef CONFIG_MVEBU_SECURE_BOOT
 		case 'c': /* SEC extension */
-			strncpy(opts.sec_cfg_file, optarg, MAX_FILENAME);
+			strncpy(opts.sec_cfg_file, optarg, NAME_MAX);
 			ext_cnt++;
 			break;
 		case 'k':
