@@ -219,11 +219,6 @@ void usage(void)
 static options_t opts = {
 	.bin_ext_file = "NA",
 	.sec_cfg_file = "NA",
-	.sec_opts = 0,
-	.load_addr = 0x0,
-	.exec_addr = 0x0,
-	.disable_print = 0,
-	.baudrate = 0,
 	.key_index = -1,
 };
 
@@ -275,15 +270,9 @@ int create_rsa_signature(mbedtls_pk_context	*pk_ctx,
 {
 	mbedtls_entropy_context		entropy;
 	mbedtls_ctr_drbg_context	ctr_drbg;
-	unsigned char			hash[32];
-	unsigned char			buf[MBEDTLS_MPI_MAX_SIZE];
+	unsigned char			hash[32] = { 0 };
+	unsigned char			buf[MBEDTLS_MPI_MAX_SIZE] = { 0 };
 	int				rval;
-
-	/* Not sure this is required,
-	 * but it's safer to start with empty buffers
-	 */
-	memset(hash, 0, sizeof(hash));
-	memset(buf, 0, sizeof(buf));
 
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 	mbedtls_entropy_init(&entropy);
@@ -352,13 +341,8 @@ int verify_rsa_signature(const unsigned char	*pub_key,
 	mbedtls_entropy_context		entropy;
 	mbedtls_ctr_drbg_context	ctr_drbg;
 	mbedtls_pk_context		pk_ctx;
-	unsigned char			hash[32];
+	unsigned char			hash[32] = { 0 };
 	int				rval;
-
-	/* Not sure this is required,
-	 * but it's safer to start with empty buffer
-	 */
-	memset(hash, 0, sizeof(hash));
 
 	mbedtls_pk_init(&pk_ctx);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -424,8 +408,8 @@ int image_encrypt(uint8_t *buf, uint32_t blen)
 {
 	struct timeval		tv;
 	char			*ptmp = (char *)&tv;
-	unsigned char		digest[32];
-	unsigned char		IV[AES_BLOCK_SZ];
+	unsigned char		digest[32] = { 0 };
+	unsigned char		IV[AES_BLOCK_SZ] = { 0 };
 	int			i, k;
 	mbedtls_aes_context	aes_ctx;
 	int			rval = -1;
@@ -438,8 +422,6 @@ int image_encrypt(uint8_t *buf, uint32_t blen)
 	}
 
 	mbedtls_aes_init(&aes_ctx);
-	memset(IV, 0, AES_BLOCK_SZ);
-	memset(digest, 0, 32);
 
 	/* Generate initialization vector and init the AES engine
 	 * Use file name XOR current time and finally SHA-256
